@@ -5,12 +5,12 @@ def load_articles():
     saved_file = 'processed_articles.pkl'
 
     import pandas as pd
+    from tqdm import tqdm
+    tqdm.pandas()
     if os.path.exists(saved_file):
         print(f"\nLoading pre-processed articles from {saved_file}...")
         return pd.read_pickle(saved_file)
 
-    from tqdm import tqdm
-    tqdm.pandas()
     # https://www.kaggle.com/datasets/aryansingh0909/nyt-articles-21m-2000-present
     df = pd.read_csv('articles.csv',
                      usecols=['abstract', 'lead_paragraph', 'pub_date'],

@@ -1,7 +1,8 @@
-import nltk
+# import nltk
+# nltk.download('punkt_tab')
+
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
-nltk.download('punkt_tab')
 stemmer = PorterStemmer()
 def stem_text(text):
     tokens = word_tokenize(text)

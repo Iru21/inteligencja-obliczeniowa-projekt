@@ -1,3 +1,4 @@
 sentiments
 .idea
 articles.csv
+processed_articles.pkl

@@ -1,6 +1,6 @@
 SUBJECT = 'Climate Change'
 
-print("Loading sentiment analysis model...")
+print("\nLoading sentiment analysis model...")
 from transformers import pipeline
 sentiment_pipeline = pipeline("sentiment-analysis")
 def analyze_sentiment(text):
@@ -8,26 +8,23 @@ def analyze_sentiment(text):
     score = result['score']
     return score if result['label'] == 'POSITIVE' else -score
 
-print("Loading articles...")
+print("\nLoading articles...")
 from load_articles import load_articles
 df = load_articles()
 
-print("Stemming article text...")
+print(f'\nSearching for articles mentioning "{SUBJECT}"...')
 from stem_text import stem_text
-df['text'] = df['text'].progress_apply(stem_text)
-
-print(f'Searching for articles mentioning "{SUBJECT}"...')
 stemmed_subject = stem_text(SUBJECT)
 df = df[df['text'].str.contains(stemmed_subject, case=False, na=False)]
 
-print(f"Analyzing sentiment for {df.shape[0]} articles...")
+print(f"\nAnalyzing sentiment for {df.shape[0]} articles...")
 df['sentiment'] = df['text'].progress_apply(analyze_sentiment)
 df['year'] = df['pub_date'].dt.year
 
-print(f'Calculating average sentiment for each year...')
+print(f'\nCalculating average sentiment for each year...')
 average_sentiment = df.groupby('year')['sentiment'].mean().reset_index()
 
-print(f'Average sentiment calculated.')
+print(f'\nAverage sentiment calculated.')
 import matplotlib.pyplot as plt
 plt.figure(figsize=(10, 5))
 plt.plot(average_sentiment['year'], average_sentiment['sentiment'], marker='o')

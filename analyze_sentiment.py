@@ -1,4 +1,7 @@
 SUBJECT = 'Climate Change'
+if SUBJECT == '':
+    print("No subject specified. Please set the SUBJECT variable to analyze sentiment.")
+    exit()
 
 print("\nLoading sentiment analysis model...")
 from transformers import pipeline
@@ -16,6 +19,9 @@ print(f'\nSearching for articles mentioning "{SUBJECT}"...')
 from stem_text import stem_text
 stemmed_subject = stem_text(SUBJECT)
 df = df[df['text'].str.contains(stemmed_subject, case=False, na=False)]
+if df.empty:
+    print(f"No articles found mentioning '{SUBJECT}'.")
+    exit()
 
 print(f"\nAnalyzing sentiment for {df.shape[0]} articles...")
 df['sentiment'] = df['text'].progress_apply(analyze_sentiment)
@@ -32,7 +38,7 @@ def calculate_average_sentiment(timescale):
     if timescale == 'year':
         plt.figure(figsize=(10, 5))
     else:
-        plt.figure(figsize=(80, 5))
+        plt.figure(figsize=(60, 5))
     plt.plot(average_sentiment[timescale], average_sentiment['sentiment'], marker='o')
     plt.title(f'Average sentiment over {timescale}s for {SUBJECT} in {df.shape[0]} articles')
     plt.xlabel(f'{timescale.capitalize()}')

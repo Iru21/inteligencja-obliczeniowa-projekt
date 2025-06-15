@@ -1,8 +1,13 @@
-import os
-from stem_text import stem_text
+def load_articles(stem=True):
+    import os
+    if not os.path.exists('sources/articles.csv'):
+        os.makedirs('sources', exist_ok=True)
+        raise FileNotFoundError("The articles.csv file is required but not found. "
+                                "Please download it from the Kaggle dataset: "
+                                "https://www.kaggle.com/datasets/aryansingh0909/nyt-articles-21m-2000-present" +
+                                " and place it in the 'sources' directory.")
 
-def load_articles():
-    saved_file = 'processed_articles.pkl'
+    saved_file = 'sources/processed_articles.pkl' if stem else 'sources/processed_articles_no_stem.pkl'
 
     import pandas as pd
     from tqdm import tqdm
@@ -12,7 +17,7 @@ def load_articles():
         return pd.read_pickle(saved_file)
 
     # https://www.kaggle.com/datasets/aryansingh0909/nyt-articles-21m-2000-present
-    df = pd.read_csv('articles.csv',
+    df = pd.read_csv('sources/articles.csv',
                      usecols=['abstract', 'lead_paragraph', 'pub_date'],
                      dtype={
                          'abstract': str,
@@ -28,8 +33,14 @@ def load_articles():
     df = df.drop(columns=['abstract', 'lead_paragraph'])
     df = df[df['text'].str.strip() != '']
 
-    print("\nStemming article text...")
-    df['text'] = df['text'].progress_apply(stem_text)
+    if df.empty:
+        print("No articles found. Please check the data source or parameters.")
+        exit()
+
+    if stem:
+        print("\nStemming article text...")
+        from stem_text import stem_text
+        df['text'] = df['text'].progress_apply(stem_text)
 
     print(f"\nSaving processed articles to {saved_file}...")
     df.to_pickle(saved_file)

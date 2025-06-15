@@ -3,13 +3,101 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport"
-              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+              content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>Article sentiment analysis</title>
+        <title>Article Sentiment Analysis</title>
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <style>
             body {
                 background-color: #222;
+            }
+
+            /* Image zoom modal styles */
+            .zoom-modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.9);
+                overflow: hidden;
+            }
+
+            .zoom-modal-content {
+                position: relative;
+                margin: auto;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                overflow: hidden;
+            }
+
+            .zoom-img {
+                max-width: none;
+                max-height: none;
+                transform-origin: center;
+                cursor: move;
+            }
+
+            .zoom-close {
+                position: absolute;
+                top: 15px;
+                right: 25px;
+                color: #f1f1f1;
+                font-size: 40px;
+                font-weight: bold;
+                transition: 0.3s;
+                z-index: 1001;
+            }
+
+            .zoom-close:hover,
+            .zoom-close:focus {
+                color: #bbb;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+            .zoom-controls {
+                position: absolute;
+                bottom: 15px;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                z-index: 1001;
+            }
+
+            .zoom-btn {
+                background-color: rgba(0, 0, 0, 0.5);
+                color: white;
+                border: 1px solid white;
+                border-radius: 4px;
+                padding: 5px 10px;
+                cursor: pointer;
+            }
+
+            .zoom-btn:hover {
+                background-color: rgba(0, 0, 0, 0.8);
+            }
+
+            .zoomable {
+                cursor: zoom-in;
+            }
+
+            img {
+              -moz-user-select: none;
+              -webkit-user-select: none;
+              -ms-user-select: none;
+              user-select: none;
+              -webkit-user-drag: none;
+              user-drag: none;
+              -webkit-touch-callout: none;
             }
         </style>
         <style type="text/tailwindcss">
@@ -22,15 +110,96 @@
             }
 
             main {
-                 @apply container mx-auto px-4 py-8 flex fle
+                @apply container mx-auto px-4 py-8;
+            }
+
+            .btn {
+                @apply px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900;
+            }
+
+            .btn-primary {
+                @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+            }
+
+            .card {
+                @apply bg-zinc-800 rounded-lg shadow-lg p-6 mb-6;
+            }
+
+            .input {
+                @apply bg-zinc-700 border border-zinc-600 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+            }
+
+            .loading {
+                @apply animate-pulse text-zinc-400;
             }
         </style>
     </head>
     <body>
         <main>
-                <h1 class="text-center text-4xl">
-                Article sentiment analysis
+            <h1 class="text-center text-4xl font-bold my-8">
+                Article Sentiment Analysis
             </h1>
+
+            <div class="card">
+                <h2 class="text-2xl font-semibold mb-4">Analyze Articles by Subject</h2>
+                <form id="analysisForm" class="space-y-4">
+                    <div>
+                        <label for="subject" class="block text-sm font-medium mb-1">Subject</label>
+                        <input type="text" id="subject" name="subject" placeholder="e.g., Climate Change, Artificial Intelligence" 
+                               class="input w-full" required>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button type="button" id="analyzeBtn" class="btn btn-primary">
+                            Analyze Sentiment
+                        </button>
+                        <button type="button" id="cloudBtn" class="btn btn-primary">
+                            Generate Word Cloud
+                        </button>
+                        <button type="button" id="clearBtn" class="btn bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500">
+                            Clear Results
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="results" class="space-y-6 hidden">
+                <div class="card" id="sentimentResultsWrapper">
+                    <h2 class="text-2xl font-semibold mb-4">Sentiment Analysis Results</h2>
+                    <div id="sentimentLoading" class="loading">Analyzing sentiment...</div>
+                    <div id="sentimentResults" class="hidden">
+                        <div class="mb-4">
+                            <h3 class="text-xl font-medium mb-2">Yearly Sentiment Trend</h3>
+                            <img id="yearlyChart" class="w-full rounded-md zoomable" alt="Yearly sentiment chart">
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-medium mb-2">Monthly Sentiment Trend</h3>
+                            <img id="monthlyChart" class="w-full rounded-md zoomable" alt="Monthly sentiment chart">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="cloudResultsWrapper">
+                    <h2 class="text-2xl font-semibold mb-4">Word Cloud</h2>
+                    <div id="cloudLoading" class="loading">Generating word cloud...</div>
+                    <div id="cloudResults" class="hidden">
+                        <img id="wordCloud" class="w-full rounded-md zoomable" alt="Word cloud">
+                    </div>
+                </div>
+            </div>
         </main>
+
+        <div id="imageZoomModal" class="zoom-modal">
+            <span class="zoom-close">&times;</span>
+            <div class="zoom-modal-content">
+                <img id="zoomedImage" class="zoom-img">
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoomIn">Zoom In (+)</button>
+                <button class="zoom-btn" id="zoomReset">Reset</button>
+                <button class="zoom-btn" id="zoomOut">Zoom Out (-)</button>
+            </div>
+        </div>
+
+        <script src="script.js"></script>
     </body>
 </html>

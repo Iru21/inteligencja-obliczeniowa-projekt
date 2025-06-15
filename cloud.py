@@ -1,4 +1,9 @@
-SUBJECT = 'Climate Change'
+import argparse
+
+parser = argparse.ArgumentParser(description='Generate word cloud from articles about a specific subject')
+parser.add_argument('--subject', type=str, default='Climate Change', help='Subject to generate word cloud for')
+args = parser.parse_args()
+SUBJECT = args.subject
 
 print("\nLoading articles...")
 from load_articles import load_articles
@@ -37,5 +42,5 @@ os.makedirs('wordclouds', exist_ok=True)
 output_path = 'wordclouds/articles_wordcloud.png' if SUBJECT == '' \
                 else f'wordclouds/{SUBJECT.lower().replace(" ", "_")}_wordcloud.png'
 plt.savefig(output_path)
-print(f"\nWord cloud saved to {output_path}")
-plt.show()
+print(f"\nWord cloud saved to {output_path} for subject '{SUBJECT}'")
+# plt.show() - Commented out to prevent blocking when run from server

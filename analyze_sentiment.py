@@ -1,6 +1,12 @@
-SUBJECT = 'Climate Change'
+import argparse
+
+parser = argparse.ArgumentParser(description='Analyze sentiment of articles about a specific subject')
+parser.add_argument('--subject', type=str, default='Global Warming', help='Subject to analyze sentiment for')
+args = parser.parse_args()
+SUBJECT = args.subject
+
 if SUBJECT == '':
-    print("No subject specified. Please set the SUBJECT variable to analyze sentiment.")
+    print("No subject specified. Please provide a subject using the --subject parameter.")
     exit()
 
 print("\nLoading sentiment analysis model...")
@@ -46,8 +52,10 @@ def calculate_average_sentiment(timescale):
     plt.xticks(average_sentiment[timescale], rotation=45)
     plt.grid()
     plt.tight_layout()
-    plt.savefig(f'sentiments/{SUBJECT.lower().replace(" ", "-")}-{timescale}s.png')
-    plt.show()
+    output_filename = f'sentiments/{SUBJECT.lower().replace(" ", "-")}-{timescale}s.png'
+    plt.savefig(output_filename)
+    print(f"Saved {timescale} sentiment chart to {output_filename}")
+    # plt.show() - Commented out to prevent blocking when run from server
 
 calculate_average_sentiment('year')
 calculate_average_sentiment('month')
